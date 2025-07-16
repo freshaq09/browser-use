@@ -252,7 +252,7 @@ The `browser_use.server` module exposes a minimal REST API for stepwise agent ex
 
 1. Start the server: `python -m browser_use.server`
 2. `POST /start-session` with `{ "task": "<task>" }` to get the first LLM request payload.
-3. `POST /send-response` with the `issue_id` and your model response to continue.
+3. `POST /send-response` with the `issue_id` and your model response to continue. When the session finishes, the endpoint returns `{ "end": true, "result": ... }`.
 
 ---
 
