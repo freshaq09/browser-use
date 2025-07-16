@@ -246,6 +246,14 @@ To learn more about the library, check out the [local setup 📕](https://docs.b
 
 `main` is the primary development branch with frequent changes. For production use, install a stable [versioned release](https://github.com/browser-use/browser-use/releases) instead.
 
+## HTTP API Wrapper
+
+The `browser_use.server` module exposes a minimal REST API for stepwise agent execution.
+
+1. Start the server: `python -m browser_use.server`
+2. `POST /start-session` with `{ "task": "<task>" }` to get the first LLM request payload.
+3. `POST /send-response` with the `issue_id` and your model response to continue. When the session finishes, the endpoint returns `{ "end": true, "result": ... }`.
+
 ---
 
 ## Swag
