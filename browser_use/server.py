@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from browser_use.agent.service import Agent
-from browser_use.llm.openai.chat import ChatOpenAI
+from browser_use.llm.openai.chat import ChatOpenAI, ReasoningModels
 from browser_use.llm.openai.serializer import OpenAIMessageSerializer
 from browser_use.llm.schema import SchemaOptimizer
 from browser_use.llm.views import ChatInvokeCompletion
@@ -35,12 +35,22 @@ class InterceptLLM(ChatOpenAI):
 
 	async def ainvoke(self, messages, output_format=None):
 		openai_messages = OpenAIMessageSerializer.serialize_messages(messages)
+
 		payload: dict[str, Any] = {
 			'model': self.model,
 			'messages': openai_messages,
 		}
+
 		if self.temperature is not None:
 			payload['temperature'] = self.temperature
+
+		reasoning_effort_dict: dict[str, Any] = {}
+		if self.model in ReasoningModels:
+			reasoning_effort_dict = {
+				'reasoning_effort': self.reasoning_effort,
+			}
+		payload.update(reasoning_effort_dict)
+
 		if output_format is not None:
 			payload['response_format'] = {
 				'type': 'json_schema',
@@ -50,9 +60,14 @@ class InterceptLLM(ChatOpenAI):
 					'schema': SchemaOptimizer.create_optimized_json_schema(output_format),
 				},
 			}
+
 		request_id = str(uuid4())
 		fut: asyncio.Future = asyncio.get_event_loop().create_future()
-		pending_requests[request_id] = {'future': fut, 'payload': payload, 'format': output_format}
+		pending_requests[request_id] = {
+			'future': fut,
+			'payload': payload,
+			'format': output_format,
+		}
 		return await fut
 
 
